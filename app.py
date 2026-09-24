@@ -1,5 +1,8 @@
 import streamlit as st
 import pandas as pd
+from pypdf import PdfReader
+from docx import Document
+from io import BytesIO
 
 st.set_page_config(
     page_title="Proposal Navigator",
@@ -24,8 +27,56 @@ uploaded_file = st.file_uploader(
     type=["pdf", "txt", "docx"]
 )
 
+document_text = ""
+
 if uploaded_file is not None:
     st.success(f"Uploaded: {uploaded_file.name}")
+
+    file_type = uploaded_file.name.lower()
+
+    try:
+        if file_type.endswith(".pdf"):
+            pdf_reader = PdfReader(uploaded_file)
+
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    document_text += page_text + "\n"
+
+        elif file_type.endswith(".txt"):
+            document_text = uploaded_file.read().decode(
+                "utf-8",
+                errors="ignore"
+            )
+
+        elif file_type.endswith(".docx"):
+            doc = Document(BytesIO(uploaded_file.read()))
+
+            for paragraph in doc.paragraphs:
+                document_text += paragraph.text + "\n"
+
+        if document_text.strip():
+            st.success("Document text extracted successfully.")
+
+            with st.expander("Preview extracted document text"):
+                st.text_area(
+                    "Document Preview",
+                    document_text[:5000],
+                    height=300
+                )
+
+            st.caption(
+                f"Approximately {len(document_text):,} characters extracted."
+            )
+
+        else:
+            st.warning(
+                "The file uploaded successfully, but no readable text "
+                "could be extracted."
+            )
+
+    except Exception as e:
+        st.error(f"Document reading error: {e}")
 
 st.divider()
 
@@ -92,8 +143,10 @@ if st.button("Run Readiness Review"):
     findings = []
 
     for item, answer in responses.items():
+
         if answer == "Yes":
             confirmed.append(item)
+
             findings.append({
                 "Requirement": item,
                 "Status": "Confirmed",
@@ -103,6 +156,7 @@ if st.button("Run Readiness Review"):
             })
 
         elif answer == "No":
+
             findings.append({
                 "Requirement": item,
                 "Status": "Not included",
@@ -113,6 +167,7 @@ if st.button("Run Readiness Review"):
 
         elif answer == "Not sure":
             missing.append(item)
+
             findings.append({
                 "Requirement": item,
                 "Status": "Needs clarification",
@@ -149,20 +204,30 @@ if st.button("Run Readiness Review"):
 
     if missing:
         for item in missing:
+
             with st.expander(item):
+
                 st.write(
                     f"Additional information is needed before {item.lower()} "
                     "can be evaluated against sponsor requirements."
                 )
+
                 st.write(
                     "Recommended next step: review the funding opportunity "
                     "and confirm the requirement with Research Administration."
                 )
+
     else:
         st.success("No intake items currently require clarification.")
 
+    if document_text:
+        st.success(
+            "The uploaded funding opportunity has been read and is available "
+            "for the AI review step."
+        )
+
     st.info(
-        "This v0 demonstrates structured intake, readiness logic, "
-        "detailed findings, and human-review routing. "
-        "Source-based AI interpretation will be added next."
+        "This v0 now demonstrates document upload, text extraction, "
+        "structured intake, readiness logic, detailed findings, "
+        "and human-review routing."
     )
