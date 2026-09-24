@@ -19,33 +19,49 @@ st.write(
     "identify proposal requirements, and flag items that may need human review."
 )
 
+
 # -----------------------------
 # Helper function
 # -----------------------------
 
-def find_source_excerpt(text, keywords, window=300):
+def clean_text(text):
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def find_source_match(pages, keywords):
     """
-    Finds the first occurrence of any keyword and returns
-    a short excerpt around it.
+    Search page-by-page and return a page number
+    plus a cleaner excerpt around the first keyword match.
     """
-    if not text:
-        return "No funding opportunity text available."
 
-    lower_text = text.lower()
+    for page_number, page_text in pages:
 
-    for keyword in keywords:
-        position = lower_text.find(keyword.lower())
+        lower_text = page_text.lower()
 
-        if position != -1:
-            start = max(0, position - window)
-            end = min(len(text), position + window)
+        for keyword in keywords:
 
-            excerpt = text[start:end]
-            excerpt = re.sub(r"\s+", " ", excerpt).strip()
+            position = lower_text.find(keyword.lower())
 
-            return excerpt
+            if position != -1:
 
-    return "No matching language located in the uploaded document."
+                start = max(0, position - 150)
+                end = min(len(page_text), position + 450)
+
+                excerpt = clean_text(page_text[start:end])
+
+                return {
+                    "found": True,
+                    "page": page_number,
+                    "keyword": keyword,
+                    "excerpt": excerpt
+                }
+
+    return {
+        "found": False,
+        "page": None,
+        "keyword": None,
+        "excerpt": None
+    }
 
 
 # -----------------------------
@@ -62,38 +78,64 @@ uploaded_file = st.file_uploader(
 )
 
 document_text = ""
+document_pages = []
 
 if uploaded_file is not None:
+
     st.success(f"Uploaded: {uploaded_file.name}")
 
     file_type = uploaded_file.name.lower()
 
     try:
+
         if file_type.endswith(".pdf"):
+
             pdf_reader = PdfReader(uploaded_file)
 
-            for page in pdf_reader.pages:
+            for index, page in enumerate(pdf_reader.pages):
+
                 page_text = page.extract_text()
 
                 if page_text:
+
                     document_text += page_text + "\n"
 
+                    document_pages.append(
+                        (index + 1, page_text)
+                    )
+
         elif file_type.endswith(".txt"):
+
             document_text = uploaded_file.read().decode(
                 "utf-8",
                 errors="ignore"
             )
 
+            document_pages.append(
+                (1, document_text)
+            )
+
         elif file_type.endswith(".docx"):
-            doc = Document(BytesIO(uploaded_file.read()))
+
+            doc = Document(
+                BytesIO(uploaded_file.read())
+            )
 
             for paragraph in doc.paragraphs:
                 document_text += paragraph.text + "\n"
 
+            document_pages.append(
+                (1, document_text)
+            )
+
         if document_text.strip():
+
             st.success("Document text extracted successfully.")
 
-            with st.expander("Preview extracted document text"):
+            with st.expander(
+                "Preview extracted document text"
+            ):
+
                 st.text_area(
                     "Document Preview",
                     document_text[:5000],
@@ -101,17 +143,27 @@ if uploaded_file is not None:
                 )
 
             st.caption(
-                f"Approximately {len(document_text):,} characters extracted."
+                f"Approximately {len(document_text):,} "
+                "characters extracted."
             )
 
+            if file_type.endswith(".pdf"):
+                st.caption(
+                    f"{len(document_pages)} readable PDF pages detected."
+                )
+
         else:
+
             st.warning(
-                "The file uploaded successfully, but no readable text "
-                "could be extracted."
+                "The file uploaded successfully, but no readable "
+                "text could be extracted."
             )
 
     except Exception as e:
-        st.error(f"Document reading error: {e}")
+
+        st.error(
+            f"Document reading error: {e}"
+        )
 
 
 # -----------------------------
@@ -174,6 +226,7 @@ st.divider()
 if st.button("Run Readiness Review"):
 
     responses = {
+
         "Personnel costs": personnel,
         "Travel": travel,
         "Equipment": equipment,
@@ -184,6 +237,7 @@ if st.button("Run Readiness Review"):
     }
 
     keyword_map = {
+
         "Personnel costs": [
             "salary",
             "salaries",
@@ -226,8 +280,8 @@ if st.button("Run Readiness Review"):
         ],
 
         "Indirect costs": [
-            "indirect cost",
             "indirect costs",
+            "indirect cost",
             "f&a",
             "facilities and administrative"
         ],
@@ -236,78 +290,122 @@ if st.button("Run Readiness Review"):
     confirmed = []
     missing = []
     findings = []
+    source_matches = {}
 
     for item, answer in responses.items():
 
-        excerpt = find_source_excerpt(
-            document_text,
+        match = find_source_match(
+            document_pages,
             keyword_map[item]
         )
 
+        source_matches[item] = match
+
         if answer == "Yes":
+
             confirmed.append(item)
 
-            status = "Confirmed"
-
-            if "No matching language" in excerpt:
-                follow_up = "Human review"
-            else:
-                follow_up = "Review source language"
-
             findings.append({
+
                 "Requirement": item,
-                "Status": status,
+
+                "Status": "Confirmed",
+
                 "Budget Impact": "Potential impact",
-                "Source Match": (
-                    "Found in document"
-                    if "No matching language" not in excerpt
-                    else "Not located"
+
+                "Source": (
+                    f"Funding opportunity p. {match['page']}"
+                    if match["found"]
+                    else "No source located"
                 ),
-                "Follow-Up": follow_up
+
+                "Follow-Up": (
+                    "Review source language"
+                    if match["found"]
+                    else "Human review"
+                )
             })
 
         elif answer == "No":
 
             findings.append({
+
                 "Requirement": item,
+
                 "Status": "Not included",
+
                 "Budget Impact": "No current impact",
-                "Source Match": (
-                    "Found in document"
-                    if "No matching language" not in excerpt
-                    else "Not located"
+
+                "Source": (
+                    f"Funding opportunity p. {match['page']}"
+                    if match["found"]
+                    else "No source located"
                 ),
-                "Follow-Up": "None"
+
+                "Follow-Up": (
+                    "Review if applicable"
+                    if match["found"]
+                    else "None"
+                )
             })
 
         elif answer == "Not sure":
+
             missing.append(item)
 
             findings.append({
+
                 "Requirement": item,
+
                 "Status": "Needs clarification",
+
                 "Budget Impact": "Unknown",
-                "Source Match": (
-                    "Found in document"
-                    if "No matching language" not in excerpt
-                    else "Not located"
+
+                "Source": (
+                    f"Funding opportunity p. {match['page']}"
+                    if match["found"]
+                    else "No source located"
                 ),
+
                 "Follow-Up": "Human review"
             })
+
 
     st.header("Step 3: Readiness Report Summary")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric("Confirmed Areas", len(confirmed))
+
+        st.metric(
+            "Confirmed Areas",
+            len(confirmed)
+        )
 
     with col2:
-        st.metric("Needs Clarification", len(missing))
+
+        st.metric(
+            "Needs Clarification",
+            len(missing)
+        )
 
     with col3:
-        status = "Good" if len(missing) == 0 else "Review Needed"
-        st.metric("Readiness Status", status)
+
+        status = (
+            "Good"
+            if len(missing) == 0
+            else "Review Needed"
+        )
+
+        st.metric(
+            "Readiness Status",
+            status
+        )
+
+
+    # -----------------------------
+    # Detailed Findings
+    # -----------------------------
 
     st.subheader("Detailed Findings")
 
@@ -321,41 +419,61 @@ if st.button("Run Readiness Review"):
 
 
     # -----------------------------
-    # SOURCE FINDINGS
+    # Source Findings
     # -----------------------------
 
-    st.subheader("Funding Opportunity Source Findings")
+    st.subheader(
+        "Funding Opportunity Source Findings"
+    )
 
     for item, answer in responses.items():
 
-        excerpt = find_source_excerpt(
-            document_text,
-            keyword_map[item]
-        )
+        match = source_matches[item]
 
-        with st.expander(f"{item} — {answer}"):
+        with st.expander(
+            f"{item} — {answer}"
+        ):
 
-            if "No matching language" in excerpt:
-                st.warning(
-                    "No obvious matching language was located "
-                    "using the current keyword search."
+            if match["found"]:
+
+                st.write(
+                    f"**Source:** Funding opportunity, "
+                    f"page {match['page']}"
+                )
+
+                st.write(
+                    f"**Matched term:** {match['keyword']}"
+                )
+
+                st.write(
+                    "**Relevant source excerpt:**"
+                )
+
+                st.info(
+                    match["excerpt"]
                 )
 
             else:
-                st.write("Relevant source excerpt:")
-                st.info(excerpt)
+
+                st.warning(
+                    "No obvious matching language was located "
+                    "using the current source search."
+                )
 
             st.caption(
-                "This source match is based on keyword retrieval only. "
-                "It has not yet been interpreted by AI."
+                "The source text has been retrieved from the "
+                "uploaded funding opportunity but has not yet "
+                "been interpreted by generative AI."
             )
 
 
     # -----------------------------
-    # HUMAN REVIEW
+    # Human Review
     # -----------------------------
 
-    st.subheader("Items Requiring Human Review")
+    st.subheader(
+        "Items Requiring Human Review"
+    )
 
     if missing:
 
@@ -369,15 +487,30 @@ if st.button("Run Readiness Review"):
                     "sponsor requirements."
                 )
 
+                match = source_matches[item]
+
+                if match["found"]:
+
+                    st.write(
+                        f"Relevant source language was located "
+                        f"on page {match['page']}."
+                    )
+
                 st.write(
-                    "Recommended next step: review the funding opportunity "
-                    "and confirm the requirement with Research Administration."
+                    "Recommended next step: review the funding "
+                    "opportunity and confirm the requirement "
+                    "with Research Administration."
                 )
 
     else:
-        st.success("No intake items currently require clarification.")
+
+        st.success(
+            "No intake items currently require clarification."
+        )
+
 
     st.info(
-        "This v0 now connects user intake with source language from the "
-        "uploaded funding opportunity. AI interpretation will be added next."
+        "This v0 connects user intake with page-level source "
+        "language from the uploaded funding opportunity. "
+        "Generative AI interpretation will be added next."
     )
