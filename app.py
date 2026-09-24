@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(
     page_title="Proposal Navigator",
@@ -88,14 +89,39 @@ if st.button("Run Readiness Review"):
 
     confirmed = []
     missing = []
+    findings = []
 
     for item, answer in responses.items():
         if answer == "Yes":
             confirmed.append(item)
+            findings.append({
+                "Requirement": item,
+                "Status": "Confirmed",
+                "Budget Impact": "Potential impact",
+                "Source": "User intake",
+                "Follow-Up": "Review sponsor guidance"
+            })
+
+        elif answer == "No":
+            findings.append({
+                "Requirement": item,
+                "Status": "Not included",
+                "Budget Impact": "No current impact",
+                "Source": "User intake",
+                "Follow-Up": "None"
+            })
+
         elif answer == "Not sure":
             missing.append(item)
+            findings.append({
+                "Requirement": item,
+                "Status": "Needs clarification",
+                "Budget Impact": "Unknown",
+                "Source": "User intake",
+                "Follow-Up": "Human review"
+            })
 
-    st.header("Step 3: Readiness Review")
+    st.header("Step 3: Readiness Report Summary")
 
     col1, col2, col3 = st.columns(3)
 
@@ -106,29 +132,37 @@ if st.button("Run Readiness Review"):
         st.metric("Needs Clarification", len(missing))
 
     with col3:
-        if len(missing) == 0:
-            st.metric("Readiness Status", "Good")
-        else:
-            st.metric("Readiness Status", "Review Needed")
+        status = "Good" if len(missing) == 0 else "Review Needed"
+        st.metric("Readiness Status", status)
 
-    if confirmed:
-        st.subheader("Confirmed Proposal Areas")
-        for item in confirmed:
-            st.success(item)
+    st.subheader("Detailed Findings")
+
+    findings_df = pd.DataFrame(findings)
+
+    st.dataframe(
+        findings_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.subheader("Items Requiring Human Review")
 
     if missing:
-        st.subheader("Items Requiring Clarification")
         for item in missing:
-            st.warning(f"{item} — additional information is needed.")
-
-    if not missing:
-        st.success(
-            "No intake questions were marked as uncertain. "
-            "The proposal can proceed to detailed funding opportunity review."
-        )
+            with st.expander(item):
+                st.write(
+                    f"Additional information is needed before {item.lower()} "
+                    "can be evaluated against sponsor requirements."
+                )
+                st.write(
+                    "Recommended next step: review the funding opportunity "
+                    "and confirm the requirement with Research Administration."
+                )
+    else:
+        st.success("No intake items currently require clarification.")
 
     st.info(
-        "This v0 demonstrates structured intake and readiness logic. "
-        "Funding opportunity interpretation and source-based AI findings "
-        "will be added in the next development step."
+        "This v0 demonstrates structured intake, readiness logic, "
+        "detailed findings, and human-review routing. "
+        "Source-based AI interpretation will be added next."
     )
