@@ -3,6 +3,7 @@ import pandas as pd
 from pypdf import PdfReader
 from docx import Document
 from io import BytesIO
+import re
 
 st.set_page_config(
     page_title="Proposal Navigator",
@@ -17,6 +18,39 @@ st.write(
     "This prototype helps users review a funding opportunity, "
     "identify proposal requirements, and flag items that may need human review."
 )
+
+# -----------------------------
+# Helper function
+# -----------------------------
+
+def find_source_excerpt(text, keywords, window=300):
+    """
+    Finds the first occurrence of any keyword and returns
+    a short excerpt around it.
+    """
+    if not text:
+        return "No funding opportunity text available."
+
+    lower_text = text.lower()
+
+    for keyword in keywords:
+        position = lower_text.find(keyword.lower())
+
+        if position != -1:
+            start = max(0, position - window)
+            end = min(len(text), position + window)
+
+            excerpt = text[start:end]
+            excerpt = re.sub(r"\s+", " ", excerpt).strip()
+
+            return excerpt
+
+    return "No matching language located in the uploaded document."
+
+
+# -----------------------------
+# STEP 1
+# -----------------------------
 
 st.divider()
 
@@ -40,6 +74,7 @@ if uploaded_file is not None:
 
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
+
                 if page_text:
                     document_text += page_text + "\n"
 
@@ -77,6 +112,11 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Document reading error: {e}")
+
+
+# -----------------------------
+# STEP 2
+# -----------------------------
 
 st.divider()
 
@@ -124,6 +164,11 @@ indirect_costs = st.radio(
     horizontal=True
 )
 
+
+# -----------------------------
+# STEP 3
+# -----------------------------
+
 st.divider()
 
 if st.button("Run Readiness Review"):
@@ -138,21 +183,87 @@ if st.button("Run Readiness Review"):
         "Indirect costs": indirect_costs,
     }
 
+    keyword_map = {
+        "Personnel costs": [
+            "salary",
+            "salaries",
+            "personnel",
+            "compensation",
+            "fringe"
+        ],
+
+        "Travel": [
+            "travel",
+            "mileage",
+            "airfare",
+            "lodging"
+        ],
+
+        "Equipment": [
+            "equipment",
+            "capital equipment"
+        ],
+
+        "Participant incentives": [
+            "participant incentive",
+            "incentive",
+            "gift card",
+            "participant support"
+        ],
+
+        "Subawards or contracts": [
+            "subaward",
+            "subrecipient",
+            "subcontract",
+            "contract"
+        ],
+
+        "Cost share or matching": [
+            "cost share",
+            "cost sharing",
+            "matching",
+            "match requirement"
+        ],
+
+        "Indirect costs": [
+            "indirect cost",
+            "indirect costs",
+            "f&a",
+            "facilities and administrative"
+        ],
+    }
+
     confirmed = []
     missing = []
     findings = []
 
     for item, answer in responses.items():
 
+        excerpt = find_source_excerpt(
+            document_text,
+            keyword_map[item]
+        )
+
         if answer == "Yes":
             confirmed.append(item)
 
+            status = "Confirmed"
+
+            if "No matching language" in excerpt:
+                follow_up = "Human review"
+            else:
+                follow_up = "Review source language"
+
             findings.append({
                 "Requirement": item,
-                "Status": "Confirmed",
+                "Status": status,
                 "Budget Impact": "Potential impact",
-                "Source": "User intake",
-                "Follow-Up": "Review sponsor guidance"
+                "Source Match": (
+                    "Found in document"
+                    if "No matching language" not in excerpt
+                    else "Not located"
+                ),
+                "Follow-Up": follow_up
             })
 
         elif answer == "No":
@@ -161,7 +272,11 @@ if st.button("Run Readiness Review"):
                 "Requirement": item,
                 "Status": "Not included",
                 "Budget Impact": "No current impact",
-                "Source": "User intake",
+                "Source Match": (
+                    "Found in document"
+                    if "No matching language" not in excerpt
+                    else "Not located"
+                ),
                 "Follow-Up": "None"
             })
 
@@ -172,7 +287,11 @@ if st.button("Run Readiness Review"):
                 "Requirement": item,
                 "Status": "Needs clarification",
                 "Budget Impact": "Unknown",
-                "Source": "User intake",
+                "Source Match": (
+                    "Found in document"
+                    if "No matching language" not in excerpt
+                    else "Not located"
+                ),
                 "Follow-Up": "Human review"
             })
 
@@ -200,16 +319,54 @@ if st.button("Run Readiness Review"):
         hide_index=True
     )
 
+
+    # -----------------------------
+    # SOURCE FINDINGS
+    # -----------------------------
+
+    st.subheader("Funding Opportunity Source Findings")
+
+    for item, answer in responses.items():
+
+        excerpt = find_source_excerpt(
+            document_text,
+            keyword_map[item]
+        )
+
+        with st.expander(f"{item} — {answer}"):
+
+            if "No matching language" in excerpt:
+                st.warning(
+                    "No obvious matching language was located "
+                    "using the current keyword search."
+                )
+
+            else:
+                st.write("Relevant source excerpt:")
+                st.info(excerpt)
+
+            st.caption(
+                "This source match is based on keyword retrieval only. "
+                "It has not yet been interpreted by AI."
+            )
+
+
+    # -----------------------------
+    # HUMAN REVIEW
+    # -----------------------------
+
     st.subheader("Items Requiring Human Review")
 
     if missing:
+
         for item in missing:
 
             with st.expander(item):
 
                 st.write(
-                    f"Additional information is needed before {item.lower()} "
-                    "can be evaluated against sponsor requirements."
+                    f"Additional information is needed before "
+                    f"{item.lower()} can be evaluated against "
+                    "sponsor requirements."
                 )
 
                 st.write(
@@ -220,14 +377,7 @@ if st.button("Run Readiness Review"):
     else:
         st.success("No intake items currently require clarification.")
 
-    if document_text:
-        st.success(
-            "The uploaded funding opportunity has been read and is available "
-            "for the AI review step."
-        )
-
     st.info(
-        "This v0 now demonstrates document upload, text extraction, "
-        "structured intake, readiness logic, detailed findings, "
-        "and human-review routing."
+        "This v0 now connects user intake with source language from the "
+        "uploaded funding opportunity. AI interpretation will be added next."
     )
