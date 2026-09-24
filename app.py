@@ -74,5 +74,61 @@ indirect_costs = st.radio(
 
 st.divider()
 
-if st.button("Continue to Readiness Review"):
-    st.success("Intake complete. AI readiness review will be added next.")
+if st.button("Run Readiness Review"):
+
+    responses = {
+        "Personnel costs": personnel,
+        "Travel": travel,
+        "Equipment": equipment,
+        "Participant incentives": participant_incentives,
+        "Subawards or contracts": subawards,
+        "Cost share or matching": cost_share,
+        "Indirect costs": indirect_costs,
+    }
+
+    confirmed = []
+    missing = []
+
+    for item, answer in responses.items():
+        if answer == "Yes":
+            confirmed.append(item)
+        elif answer == "Not sure":
+            missing.append(item)
+
+    st.header("Step 3: Readiness Review")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Confirmed Areas", len(confirmed))
+
+    with col2:
+        st.metric("Needs Clarification", len(missing))
+
+    with col3:
+        if len(missing) == 0:
+            st.metric("Readiness Status", "Good")
+        else:
+            st.metric("Readiness Status", "Review Needed")
+
+    if confirmed:
+        st.subheader("Confirmed Proposal Areas")
+        for item in confirmed:
+            st.success(item)
+
+    if missing:
+        st.subheader("Items Requiring Clarification")
+        for item in missing:
+            st.warning(f"{item} — additional information is needed.")
+
+    if not missing:
+        st.success(
+            "No intake questions were marked as uncertain. "
+            "The proposal can proceed to detailed funding opportunity review."
+        )
+
+    st.info(
+        "This v0 demonstrates structured intake and readiness logic. "
+        "Funding opportunity interpretation and source-based AI findings "
+        "will be added in the next development step."
+    )
