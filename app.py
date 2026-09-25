@@ -4,6 +4,8 @@ from pypdf import PdfReader
 from docx import Document
 from io import BytesIO
 import re
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(
     page_title="Proposal Navigator",
@@ -64,7 +66,55 @@ def find_source_match(pages, keywords):
         "keyword": None,
         "excerpt": None
     }
+def interpret_source_with_ai(category, intake_answer, match):
+    """
+    Uses the retrieved sponsor language to generate a concise,
+    source-grounded interpretation.
+    """
 
+    if not match["found"]:
+        return (
+            "No relevant sponsor language was located using the current "
+            "retrieval method. Human review is recommended."
+        )
+
+    prompt = f"""
+You are assisting with proposal-readiness review in research administration.
+
+Review ONLY the source excerpt provided below.
+Do not invent sponsor requirements.
+Do not assume that silence in the excerpt means something is allowed or prohibited.
+
+Proposal category: {category}
+User intake answer: {intake_answer}
+Source page: {match['page']}
+
+SOURCE EXCERPT:
+{match['excerpt']}
+
+Provide a concise interpretation using this format:
+
+Sponsor Requirement:
+Budget Impact:
+Alignment With Intake:
+Human Review Needed:
+Reason:
+
+Keep the response under 140 words.
+If the excerpt is ambiguous or incomplete, say so clearly.
+"""
+
+    try:
+        response = client.responses.create(
+            model="gpt-5.6-luna",
+            reasoning={"effort": "low"},
+            input=prompt
+        )
+
+        return response.output_text
+
+    except Exception as e:
+        return f"AI interpretation unavailable: {e}"
 # -----------------------------
 # STEP 1
 # -----------------------------
