@@ -30,24 +30,26 @@ def clean_text(text):
 
 def find_source_match(pages, keywords):
     """
-    Search page-by-page and return a page number
-    plus a cleaner excerpt around the first keyword match.
+    Search page-by-page using normalized text so PDF
+    line breaks and extra spaces do not prevent matches.
     """
 
     for page_number, page_text in pages:
 
-        lower_text = page_text.lower()
+        normalized_text = clean_text(page_text)
+        lower_text = normalized_text.lower()
 
         for keyword in keywords:
 
-            position = lower_text.find(keyword.lower())
+            normalized_keyword = clean_text(keyword).lower()
+            position = lower_text.find(normalized_keyword)
 
             if position != -1:
 
                 start = max(0, position - 150)
-                end = min(len(page_text), position + 450)
+                end = min(len(normalized_text), position + 450)
 
-                excerpt = clean_text(page_text[start:end])
+                excerpt = normalized_text[start:end]
 
                 return {
                     "found": True,
@@ -62,7 +64,6 @@ def find_source_match(pages, keywords):
         "keyword": None,
         "excerpt": None
     }
-
 
 # -----------------------------
 # STEP 1
@@ -279,12 +280,13 @@ if st.button("Run Readiness Review"):
             "match requirement"
         ],
 
-        "Indirect costs": [
-            "indirect costs",
-            "indirect cost",
-            "f&a",
-            "facilities and administrative"
-        ],
+      "Indirect costs": [
+    "indirect costs",
+    "indirect cost",
+    "indirect",
+    "f&a",
+    "facilities and administrative"
+],
     }
 
     confirmed = []
