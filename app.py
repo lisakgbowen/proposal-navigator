@@ -212,18 +212,22 @@ st.markdown("""
     line-height:1.05 !important;
 }
 [data-testid="stRadio"] [role="radiogroup"]{
-    gap:.22rem !important;
+    gap:.16rem !important;
     justify-content:flex-end;
+    flex-wrap:nowrap !important;
+    white-space:nowrap !important;
     margin-top:-.12rem;
 }
 [data-testid="stRadio"] [role="radiogroup"] label{
-    font-size:.68rem !important;
+    font-size:.66rem !important;
     border:1px solid #efb8cb;
     border-radius:7px;
-    padding:.08rem .34rem !important;
+    padding:.05rem .25rem !important;
     background:#fffafb;
-    min-width:44px;
+    min-width:auto !important;
+    width:auto !important;
     justify-content:center;
+    white-space:nowrap !important;
 }
 [data-testid="stRadio"] [role="radiogroup"] label:has(input:checked){
     background:#ef3b73;
@@ -423,6 +427,11 @@ div.stButton > button:hover{
 }
 [data-testid="stHorizontalBlock"]{
     gap:.32rem !important;
+}
+
+
+[data-testid="stRadio"] [role="radiogroup"] > label > div:first-child{
+    margin-right:.12rem !important;
 }
 
 </style>
@@ -757,7 +766,7 @@ st.markdown(
 # -----------------------------
 # EXTRACT DOCUMENT
 # -----------------------------
-col1, col2, col3 = st.columns([1.12, 0.92, 1.0], gap="small")
+col1, col2, col3 = st.columns([1.05, 1.15, 1.0], gap="small")
 
 with col1:
     with st.container(border=True):
@@ -834,7 +843,7 @@ with col2:
             unsafe_allow_html=True,
         )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Personnel costs?</div>', unsafe_allow_html=True)
         with q_right:
@@ -847,7 +856,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Travel?</div>', unsafe_allow_html=True)
         with q_right:
@@ -860,7 +869,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Equipment?</div>', unsafe_allow_html=True)
         with q_right:
@@ -873,7 +882,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Participant incentives?</div>', unsafe_allow_html=True)
         with q_right:
@@ -886,7 +895,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Subawards or contracts?</div>', unsafe_allow_html=True)
         with q_right:
@@ -899,7 +908,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Cost share or matching?</div>', unsafe_allow_html=True)
         with q_right:
@@ -912,7 +921,7 @@ with col2:
                 label_visibility="collapsed",
             )
 
-        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        q_left, q_right = st.columns([1.0, 1.75], gap="small")
         with q_left:
             st.markdown('<div class="pn-qtext">Indirect costs?</div>', unsafe_allow_html=True)
         with q_right:
