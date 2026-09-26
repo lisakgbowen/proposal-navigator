@@ -1310,6 +1310,32 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+with st.expander("How to Use Proposal Navigator", expanded=False):
+    st.markdown(
+        """
+        **1. Upload the sponsor's funding document.**  
+        This may be called a **Notice of Funding Opportunity (NOFO)**,
+        **Request for Proposals (RFP)**, funding announcement, or other sponsor guidance.
+
+        **2. Complete the Guided Intake Questions.**  
+        Answer what you expect to include in the proposal budget.
+        If you do not know an answer, choose **Not sure**.
+
+        **3. Run the Readiness Review.**  
+        Proposal Navigator compares your answers with language found in the sponsor document.
+
+        **4. Review the Readiness Summary and Detailed Findings.**  
+        Look at source-page references, budget impacts, and institutional guidance.
+
+        **5. Review Items Requiring Human Review.**  
+        Follow the recommended next steps or use **Contact Support** to reach your Research Support Team.
+
+        *Proposal Navigator provides decision support. It does not replace sponsor guidance,
+        institutional policy, or Research Administration judgment.*
+        """
+    )
+
 # -----------------------------
 # EXTRACT DOCUMENT
 # -----------------------------
@@ -1323,8 +1349,13 @@ with col1:
             unsafe_allow_html=True,
         )
 
+        st.caption(
+            "Upload the funding announcement supplied by the sponsor. "
+            "It may be called a NOFO, RFP, or funding opportunity announcement."
+        )
+
         uploaded_file = st.file_uploader(
-            "Upload a NOFO, RFP, or sponsor guidance document",
+            "Upload a Notice of Funding Opportunity (NOFO), RFP, or other sponsor guidance document",
             type=["pdf", "txt", "docx"],
             key="funding_file",
         )
