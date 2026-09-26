@@ -416,8 +416,8 @@ with c2:
             '<span class="pn-cardtitle">Guided Intake Questions</span></div>',
             unsafe_allow_html=True
         )
-       st.progress(1.0)
-st.caption("7 intake questions")
+        st.progress(1.0)
+        st.caption("7 intake questions")
         personnel = st.radio("Personnel costs?", ["Yes","No","Not sure"], horizontal=True, key="personnel")
         travel = st.radio("Travel?", ["Yes","No","Not sure"], horizontal=True, key="travel")
         equipment = st.radio("Equipment?", ["Yes","No","Not sure"], horizontal=True, key="equipment")
