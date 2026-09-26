@@ -80,6 +80,14 @@ st.markdown("""
 [data-testid="stSidebar"] .block-container{
     padding:.8rem .65rem;
 }
+
+.pn-side-compass{
+    font-size:2.6rem;
+    line-height:1;
+    margin-bottom:.28rem;
+    text-align:left;
+}
+
 .pn-side-title{
     font-family:Georgia,"Times New Roman",serif;
     color:var(--ink);
@@ -407,17 +415,13 @@ div.stButton > button:hover{
 # HELPERS
 # -----------------------------
 def reset_intake():
-    for key in [
-        "personnel",
-        "travel",
-        "equipment",
-        "participant_incentives",
-        "subawards",
-        "cost_share",
-        "indirect_costs",
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]
+    st.session_state["personnel"] = None
+    st.session_state["travel"] = None
+    st.session_state["equipment"] = None
+    st.session_state["participant_incentives"] = None
+    st.session_state["subawards"] = None
+    st.session_state["cost_share"] = None
+    st.session_state["indirect_costs"] = None
     st.session_state.review_phase = "ready"
     st.session_state.review_results = None
 
@@ -675,7 +679,8 @@ def render_review_animation(running=True):
 # SIDEBAR
 # -----------------------------
 with st.sidebar:
-    st.markdown('<div class="pn-side-title">🧭 Proposal<br>Navigator</div>', unsafe_allow_html=True)
+    st.markdown('<div class="pn-side-compass">🧭</div>', unsafe_allow_html=True)
+    st.markdown('<div class="pn-side-title">Proposal<br>Navigator</div>', unsafe_allow_html=True)
     st.markdown('<div class="pn-side-sub">From funding opportunity to proposal ready.</div>', unsafe_allow_html=True)
 
     for n, label in [
@@ -794,9 +799,11 @@ with col2:
         st.progress(answered_count / 7)
         st.caption(f"{answered_count} of 7 answered")
 
-        if st.button("Reset Intake", use_container_width=True):
-            reset_intake()
-            st.rerun()
+        st.button(
+            "Reset Intake",
+            on_click=reset_intake,
+            use_container_width=True
+        )
 
 with col3:
     with st.container(border=True):
