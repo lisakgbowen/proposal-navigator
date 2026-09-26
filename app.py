@@ -5,6 +5,7 @@ from docx import Document
 from io import BytesIO
 import re
 import time
+import hashlib
 import os
 
 try:
@@ -462,27 +463,36 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
 
-def extract_document(uploaded_file):
+@st.cache_data(show_spinner=False)
+def extract_document_cached(file_name, file_bytes):
+    """
+    Parse the uploaded funding document once and cache the result.
+    Streamlit reruns the script whenever an intake answer changes; caching
+    prevents the PDF/DOCX from being re-read on every click.
+    """
     document_text = ""
     document_pages = []
-    if uploaded_file is None:
+
+    if not file_bytes:
         return document_text, document_pages, None
 
     try:
-        file_name = uploaded_file.name.lower()
+        lower_name = file_name.lower()
 
-        if file_name.endswith(".pdf"):
-            reader = PdfReader(uploaded_file)
+        if lower_name.endswith(".pdf"):
+            reader = PdfReader(BytesIO(file_bytes))
             for i, page in enumerate(reader.pages, start=1):
                 page_text = page.extract_text() or ""
                 if page_text.strip():
                     document_text += page_text + "\n"
                     document_pages.append((i, page_text))
-        elif file_name.endswith(".txt"):
-            document_text = uploaded_file.read().decode("utf-8", errors="ignore")
+
+        elif lower_name.endswith(".txt"):
+            document_text = file_bytes.decode("utf-8", errors="ignore")
             document_pages.append((1, document_text))
-        elif file_name.endswith(".docx"):
-            doc = Document(BytesIO(uploaded_file.read()))
+
+        elif lower_name.endswith(".docx"):
+            doc = Document(BytesIO(file_bytes))
             paragraphs = [p.text for p in doc.paragraphs if p.text]
             document_text = "\n".join(paragraphs)
             document_pages.append((1, document_text))
@@ -492,8 +502,20 @@ def extract_document(uploaded_file):
             "pages": len(document_pages),
         }
         return document_text, document_pages, meta
+
     except Exception as e:
         return "", [], {"error": str(e)}
+
+
+def get_document_data(uploaded_file):
+    """
+    Converts the upload to immutable bytes and uses the cached parser above.
+    """
+    if uploaded_file is None:
+        return "", [], None
+
+    file_bytes = uploaded_file.getvalue()
+    return extract_document_cached(uploaded_file.name, file_bytes)
 
 
 def find_source_match(pages, keywords):
@@ -1130,7 +1152,7 @@ with col1:
             key="funding_file",
         )
 
-        document_text, document_pages, document_meta = extract_document(uploaded_file)
+        document_text, document_pages, document_meta = get_document_data(uploaded_file)
 
         if uploaded_file is not None:
             st.success(f"Uploaded: {uploaded_file.name}")
@@ -1260,7 +1282,15 @@ with col3:
                 unsafe_allow_html=True,
             )
         else:
-            review_visual.markdown(render_review_animation(True), unsafe_allow_html=True)
+            review_visual.markdown(
+                '<div class="pn-review-wrap">'
+                '<div class="compass" style="position:relative;left:auto;top:auto;transform:none;'
+                'width:66px;height:66px;border:2px solid #f0c4d5;border-radius:50%;'
+                'background:linear-gradient(180deg,#fff7fa,#fff);display:flex;align-items:center;'
+                'justify-content:center;font-size:1.55rem;margin:.1rem auto .3rem auto;">🧭</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
             review_status.markdown(
                 '<div class="pn-status">◎ Ready to analyze the funding document</div>',
                 unsafe_allow_html=True,
