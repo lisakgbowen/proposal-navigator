@@ -1577,54 +1577,53 @@ else:
 # -----------------------------
 # BOTTOM INFORMATION STRIP
 # -----------------------------
-st.markdown(
-    """
-    <div class="pn-info-strip">
-        <div class="pn-info-brand">
-            <div class="pn-info-dragonfly">✧</div>
-            <div class="pn-info-tagline">
-                <b style="color:#ef3b73;">Guiding your way.</b><br>
-                Helping your research take flight.
-            </div>
-        </div>
+footer_html = """
+<div class="pn-info-strip">
+<div class="pn-info-brand">
+<div class="pn-info-dragonfly">✧</div>
+<div class="pn-info-tagline">
+<b style="color:#ef3b73;">Guiding your way.</b><br>
+Helping your research take flight.
+</div>
+</div>
 
-        <div class="pn-info-cell">
-            <div class="pn-info-title"><span class="pn-info-icon">♙</span>Who is this for?</div>
-            <div class="pn-info-text">
-                Principal Investigators,<br>
-                Research Staff, and<br>
-                Pre-Award Teams
-            </div>
-        </div>
+<div class="pn-info-cell">
+<div class="pn-info-title"><span class="pn-info-icon">♙</span>Who is this for?</div>
+<div class="pn-info-text">
+Principal Investigators,<br>
+Research Staff, and<br>
+Pre-Award Teams
+</div>
+</div>
 
-        <div class="pn-info-cell">
-            <div class="pn-info-title"><span class="pn-info-icon">🎯</span>What does it do?</div>
-            <div class="pn-info-text">
-                Helps you understand budget rules,<br>
-                identify gaps early, and prepare<br>
-                stronger proposals.
-            </div>
-        </div>
+<div class="pn-info-cell">
+<div class="pn-info-title"><span class="pn-info-icon">🎯</span>What does it do?</div>
+<div class="pn-info-text">
+Helps you understand budget rules,<br>
+identify gaps early, and prepare<br>
+stronger proposals.
+</div>
+</div>
 
-        <div class="pn-info-cell">
-            <div class="pn-info-title"><span class="pn-info-icon">✓</span>How does it help?</div>
-            <ul class="pn-info-list">
-                <li>Saves time</li>
-                <li>Reduces errors</li>
-                <li>Supports compliance</li>
-                <li>Flags items needing expert review</li>
-            </ul>
-        </div>
+<div class="pn-info-cell">
+<div class="pn-info-title"><span class="pn-info-icon">✓</span>How does it help?</div>
+<ul class="pn-info-list">
+<li>Saves time</li>
+<li>Reduces errors</li>
+<li>Supports compliance</li>
+<li>Flags items needing expert review</li>
+</ul>
+</div>
 
-        <div class="pn-info-cell">
-            <div class="pn-info-title"><span class="pn-info-icon">💡</span>Important</div>
-            <div class="pn-info-text">
-                AI provides guidance based on the NOFO and institutional rules.
-                Always follow up with your Research Administration team for final approval.
-            </div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+<div class="pn-info-cell">
+<div class="pn-info-title"><span class="pn-info-icon">💡</span>Important</div>
+<div class="pn-info-text">
+AI provides guidance based on the NOFO and institutional rules.
+Always follow up with your Research Administration team for final approval.
+</div>
+</div>
+</div>
+"""
+
+st.markdown(footer_html, unsafe_allow_html=True)
 
