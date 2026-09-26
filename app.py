@@ -344,8 +344,7 @@ st.markdown("""
 # -----------------------------
 # TOP DASHBOARD ROW: 1 / 2 / 3
 # -----------------------------
-c1, c2, c3 = st.columns([1.05, 1.3, 1.0], gap="small")
-
+c1, c2, c3 = st.columns([1.1, 0.9, 1.0], gap="small")
 document_text = ""
 document_pages = []
 
