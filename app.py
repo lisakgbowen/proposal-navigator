@@ -416,7 +416,13 @@ with c2:
             '<span class="pn-cardtitle">Guided Intake Questions</span></div>',
             unsafe_allow_html=True
         )
+        progress_col, step_col = st.columns([4, 1])
 
+        with progress_col:
+            st.progress(1 / 7)
+
+        with step_col:
+            st.caption("Step 1 of 7")
         personnel = st.radio("Personnel costs?", ["Yes","No","Not sure"], horizontal=True, key="personnel")
         travel = st.radio("Travel?", ["Yes","No","Not sure"], horizontal=True, key="travel")
         equipment = st.radio("Equipment?", ["Yes","No","Not sure"], horizontal=True, key="equipment")
