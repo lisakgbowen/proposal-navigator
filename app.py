@@ -72,8 +72,8 @@ st.markdown("""
     padding-right:.9rem;
 }
 [data-testid="stSidebar"]{
-    min-width:170px !important;
-    max-width:170px !important;
+    min-width:190px !important;
+    max-width:190px !important;
     background:linear-gradient(180deg,#fff2f6,#fffafa);
     border-right:1px solid var(--border);
 }
@@ -82,10 +82,10 @@ st.markdown("""
 }
 
 .pn-side-compass{
-    font-size:2.6rem;
-    line-height:1;
-    margin-bottom:.28rem;
-    text-align:left;
+    font-size:6.25rem;
+    line-height:.88;
+    margin-bottom:.18rem;
+    text-align:center;
 }
 
 .pn-side-title{
@@ -170,7 +170,7 @@ st.markdown("""
     box-shadow:0 3px 12px rgba(82,38,61,.035);
 }
 [data-testid="stVerticalBlockBorderWrapper"] > div{
-    padding:.58rem .7rem !important;
+    padding:.48rem .62rem !important;
 }
 .pn-cardhead{
     display:flex;
@@ -202,13 +202,33 @@ st.markdown("""
     border-radius:12px;
     padding:.4rem .55rem;
 }
-[data-testid="stRadio"]{margin-bottom:-.3rem;}
+[data-testid="stRadio"]{
+    margin-top:-.28rem;
+    margin-bottom:-.62rem;
+}
 [data-testid="stRadio"] > label{
     font-size:.7rem !important;
-    margin-bottom:-.12rem !important;
+    margin-bottom:-.26rem !important;
+    line-height:1.05 !important;
+}
+[data-testid="stRadio"] [role="radiogroup"]{
+    gap:.22rem !important;
+    justify-content:flex-end;
+    margin-top:-.12rem;
 }
 [data-testid="stRadio"] [role="radiogroup"] label{
-    font-size:.69rem !important;
+    font-size:.68rem !important;
+    border:1px solid #efb8cb;
+    border-radius:7px;
+    padding:.08rem .34rem !important;
+    background:#fffafb;
+    min-width:44px;
+    justify-content:center;
+}
+[data-testid="stRadio"] [role="radiogroup"] label:has(input:checked){
+    background:#ef3b73;
+    color:white !important;
+    border-color:#ef3b73;
 }
 [data-testid="stMetric"]{
     border:1px solid var(--border);
@@ -256,7 +276,11 @@ div.stButton > button:hover{
     padding:.42rem .55rem !important;
     font-size:.69rem !important;
 }
-.stCaption{font-size:.64rem !important;}
+.stCaption{
+    font-size:.64rem !important;
+    margin-top:-.22rem !important;
+    margin-bottom:-.08rem !important;
+}
 .pn-mini{
     padding:.5rem .58rem;
     border-radius:10px;
@@ -353,47 +377,18 @@ div.stButton > button:hover{
     inset:0;
     animation:pnorbit 2.2s linear infinite;
 }
-.pn-loader .dragonfly{
+.pn-loader .dragonfly-svg{
     position:absolute;
-    top:2px;
+    top:-4px;
     left:50%;
     transform:translateX(-50%);
-    width:26px;
-    height:26px;
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.08));
 }
-.pn-loader .dragonfly .body{
-    position:absolute;
-    left:11px;
-    top:5px;
-    width:4px;
-    height:16px;
-    border-radius:999px;
-    background:var(--pink);
-}
-.pn-loader .dragonfly .head{
-    position:absolute;
-    left:9px;
-    top:2px;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:var(--pink);
-}
-.pn-loader .dragonfly .wing1,
-.pn-loader .dragonfly .wing2,
-.pn-loader .dragonfly .wing3,
-.pn-loader .dragonfly .wing4{
-    position:absolute;
-    width:10px;
-    height:6px;
-    border:1.6px solid var(--pink);
-    background:rgba(255,255,255,.8);
-    border-radius:10px;
-}
-.pn-loader .dragonfly .wing1{left:1px;top:6px;transform:rotate(-24deg);}
-.pn-loader .dragonfly .wing2{left:14px;top:6px;transform:rotate(24deg);}
-.pn-loader .dragonfly .wing3{left:1px;top:12px;transform:rotate(18deg);}
-.pn-loader .dragonfly .wing4{left:14px;top:12px;transform:rotate(-18deg);}
 @keyframes pnorbit{to{transform:rotate(360deg)}}
 .pn-check-circle{
     width:82px;
@@ -408,6 +403,28 @@ div.stButton > button:hover{
     font-weight:700;
     margin:.2rem auto .35rem auto;
 }
+
+[data-testid="stProgress"]{
+    margin-top:.18rem;
+    margin-bottom:.05rem;
+}
+[data-testid="stProgress"] > div > div{
+    height:.42rem !important;
+}
+
+
+.pn-qtext{
+    font-size:.69rem;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1.05;
+    padding-top:.18rem;
+    white-space:nowrap;
+}
+[data-testid="stHorizontalBlock"]{
+    gap:.32rem !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -660,13 +677,30 @@ def render_review_animation(running=True):
                 <div class="orbit-ring"></div>
                 <div class="compass">🧭</div>
                 <div class="orbiter">
-                    <div class="dragonfly">
-                        <div class="head"></div>
-                        <div class="body"></div>
-                        <div class="wing1"></div>
-                        <div class="wing2"></div>
-                        <div class="wing3"></div>
-                        <div class="wing4"></div>
+                    <div class="dragonfly-svg">
+                        <svg viewBox="0 0 120 120" width="40" height="40" aria-hidden="true">
+                            <ellipse cx="38" cy="38" rx="23" ry="10"
+                                fill="rgba(255,255,255,0.95)"
+                                stroke="#ef3b73" stroke-width="4"
+                                transform="rotate(-22 38 38)"/>
+                            <ellipse cx="82" cy="38" rx="23" ry="10"
+                                fill="rgba(255,255,255,0.95)"
+                                stroke="#ef3b73" stroke-width="4"
+                                transform="rotate(22 82 38)"/>
+                            <ellipse cx="38" cy="68" rx="20" ry="9"
+                                fill="rgba(255,255,255,0.95)"
+                                stroke="#ef3b73" stroke-width="4"
+                                transform="rotate(18 38 68)"/>
+                            <ellipse cx="82" cy="68" rx="20" ry="9"
+                                fill="rgba(255,255,255,0.95)"
+                                stroke="#ef3b73" stroke-width="4"
+                                transform="rotate(-18 82 68)"/>
+                            <rect x="55" y="20" width="10" height="62" rx="5" fill="#ef3b73"/>
+                            <circle cx="60" cy="15" r="8" fill="#ef3b73"/>
+                            <rect x="57" y="80" width="6" height="24" rx="3" fill="#ef3b73"/>
+                            <line x1="56" y1="9" x2="49" y2="3" stroke="#ef3b73" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="64" y1="9" x2="71" y2="3" stroke="#ef3b73" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -773,36 +807,128 @@ with col2:
             unsafe_allow_html=True,
         )
 
-        st.caption("Answer each item. 'Not sure' counts as an answer and routes that item for clarification.")
-
-        personnel = st.radio("Personnel costs?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="personnel")
-        travel = st.radio("Travel?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="travel")
-        equipment = st.radio("Equipment?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="equipment")
-        participant_incentives = st.radio("Participant incentives?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="participant_incentives")
-        subawards = st.radio("Subawards or contracts?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="subawards")
-        cost_share = st.radio("Cost share or matching?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="cost_share")
-        indirect_costs = st.radio("Indirect costs?", ["Yes", "No", "Not sure"], horizontal=True, index=None, key="indirect_costs")
-
+        # Progress is based on the widget state so it can appear directly
+        # under the Step 2 title, before the radio controls are rendered.
+        intake_keys = [
+            "personnel",
+            "travel",
+            "equipment",
+            "participant_incentives",
+            "subawards",
+            "cost_share",
+            "indirect_costs",
+        ]
         answered_count = sum(
-            value is not None
-            for value in [
-                personnel,
-                travel,
-                equipment,
-                participant_incentives,
-                subawards,
-                cost_share,
-                indirect_costs,
-            ]
+            st.session_state.get(key) is not None
+            for key in intake_keys
         )
 
         st.progress(answered_count / 7)
         st.caption(f"{answered_count} of 7 answered")
 
+        st.markdown(
+            '<div style="font-size:.64rem;color:#77697a;margin:-.12rem 0 .18rem 0;">'
+            'Yes, No, and Not sure all count as responses. '
+            'Not sure routes the item for clarification.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Personnel costs?</div>', unsafe_allow_html=True)
+        with q_right:
+            personnel = st.radio(
+                "Personnel costs?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="personnel",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Travel?</div>', unsafe_allow_html=True)
+        with q_right:
+            travel = st.radio(
+                "Travel?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="travel",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Equipment?</div>', unsafe_allow_html=True)
+        with q_right:
+            equipment = st.radio(
+                "Equipment?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="equipment",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Participant incentives?</div>', unsafe_allow_html=True)
+        with q_right:
+            participant_incentives = st.radio(
+                "Participant incentives?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="participant_incentives",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Subawards or contracts?</div>', unsafe_allow_html=True)
+        with q_right:
+            subawards = st.radio(
+                "Subawards or contracts?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="subawards",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Cost share or matching?</div>', unsafe_allow_html=True)
+        with q_right:
+            cost_share = st.radio(
+                "Cost share or matching?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="cost_share",
+                label_visibility="collapsed",
+            )
+
+        q_left, q_right = st.columns([1.15, 1.0], gap="small")
+        with q_left:
+            st.markdown('<div class="pn-qtext">Indirect costs?</div>', unsafe_allow_html=True)
+        with q_right:
+            indirect_costs = st.radio(
+                "Indirect costs?",
+                ["Yes", "No", "Not sure"],
+                horizontal=True,
+                index=None,
+                key="indirect_costs",
+                label_visibility="collapsed",
+            )
+
         st.button(
             "Reset Intake",
             on_click=reset_intake,
-            use_container_width=True
+            use_container_width=True,
         )
 
 with col3:
