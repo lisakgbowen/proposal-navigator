@@ -552,7 +552,6 @@ If the excerpt is ambiguous or incomplete, say so clearly.
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
-            reasoning={"effort": "low"},
             input=prompt,
         )
         return response.output_text
