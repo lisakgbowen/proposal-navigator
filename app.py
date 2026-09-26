@@ -545,6 +545,33 @@ div.stButton > button:hover{
     }
 }
 
+
+.pn-info-strip .pn-info-list{
+    list-style:none !important;
+    margin:.02rem 0 0 0 !important;
+    padding:0 !important;
+    font-size:.58rem !important;
+    color:var(--muted) !important;
+    line-height:1.32 !important;
+    font-family:inherit !important;
+    font-weight:400 !important;
+}
+.pn-info-strip .pn-info-list li{
+    margin:.01rem 0 !important;
+    padding:0 !important;
+    font-size:.58rem !important;
+    line-height:1.32 !important;
+    font-family:inherit !important;
+    font-weight:400 !important;
+    color:var(--muted) !important;
+}
+.pn-info-strip .pn-info-list li::before{
+    content:"✓";
+    color:var(--ink);
+    font-weight:700;
+    margin-right:.26rem;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
