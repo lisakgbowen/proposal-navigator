@@ -436,60 +436,95 @@ div.stButton > button:hover{
 }
 
 
+
 .pn-info-strip{
-    margin-top:.7rem;
+    margin-top:.65rem;
     border:1px solid var(--border);
     border-radius:14px;
-    background:linear-gradient(90deg,#fff3f7 0%,#fffafa 16%,#ffffff 100%);
+    background:linear-gradient(90deg,#fff4f8 0%,#fffafa 18%,#ffffff 100%);
     display:grid;
-    grid-template-columns:1.1fr 1.35fr 1.55fr 1.6fr 1.55fr;
-    gap:0;
+    grid-template-columns:1.05fr 1.35fr 1.45fr 1.55fr 1.45fr;
+    align-items:stretch;
     overflow:hidden;
+    min-height:112px;
 }
 .pn-info-brand,
 .pn-info-cell{
-    padding:.72rem .78rem;
+    padding:.72rem .82rem;
     min-width:0;
 }
 .pn-info-cell{
-    border-left:1px solid #f3dde5;
+    border-left:1px solid #f2dce4;
+    display:flex;
+    align-items:flex-start;
+    gap:.62rem;
 }
 .pn-info-brand{
     display:flex;
     align-items:center;
-    gap:.55rem;
+    gap:.62rem;
 }
-.pn-info-dragonfly{
-    font-size:1.75rem;
-    line-height:1;
-    transform:rotate(-12deg);
+.pn-footer-dragonfly{
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
 }
 .pn-info-tagline{
-    font-size:.66rem;
+    font-size:.63rem;
     color:var(--muted);
-    line-height:1.32;
+    line-height:1.35;
+}
+.pn-info-heading-wrap{
+    min-width:0;
 }
 .pn-info-title{
-    font-size:.69rem;
+    font-size:.68rem;
     font-weight:700;
     color:var(--ink);
-    margin-bottom:.26rem;
+    margin-bottom:.22rem;
+    line-height:1.15;
 }
 .pn-info-text{
-    font-size:.64rem;
+    font-size:.62rem;
     color:var(--muted);
-    line-height:1.38;
+    line-height:1.42;
 }
 .pn-info-list{
-    margin:0;
-    padding-left:.95rem;
-    font-size:.64rem;
+    list-style:none;
+    margin:.08rem 0 0 0;
+    padding:0;
+    font-size:.62rem;
     color:var(--muted);
-    line-height:1.38;
+    line-height:1.42;
 }
-.pn-info-icon{
-    font-size:1.08rem;
-    margin-right:.25rem;
+.pn-info-list li{
+    margin:.03rem 0;
+}
+.pn-info-list li::before{
+    content:"✓";
+    color:var(--ink);
+    font-weight:700;
+    margin-right:.32rem;
+}
+.pn-info-iconbox{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.pn-info-iconbox svg{
+    width:34px;
+    height:34px;
+    stroke:var(--ink);
+    fill:none;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+.pn-info-iconbox.pink svg{
+    stroke:var(--pink);
 }
 @media (max-width: 900px){
     .pn-info-strip{
@@ -1579,34 +1614,72 @@ else:
 # -----------------------------
 footer_html = """
 <div class="pn-info-strip">
+
 <div class="pn-info-brand">
-<div class="pn-info-dragonfly">✧</div>
+<svg class="pn-footer-dragonfly" viewBox="0 0 120 120" aria-hidden="true">
+<ellipse cx="38" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-22 38 38)"/>
+<ellipse cx="82" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(22 82 38)"/>
+<ellipse cx="38" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(18 38 68)"/>
+<ellipse cx="82" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-18 82 68)"/>
+<rect x="55" y="20" width="10" height="62" rx="5" fill="#ef3b73"/>
+<circle cx="60" cy="15" r="8" fill="#ef3b73"/>
+<rect x="57" y="80" width="6" height="24" rx="3" fill="#ef3b73"/>
+</svg>
 <div class="pn-info-tagline">
 <b style="color:#ef3b73;">Guiding your way.</b><br>
-Helping your research take flight.
+Helping your research<br>
+take flight.
 </div>
 </div>
 
 <div class="pn-info-cell">
-<div class="pn-info-title"><span class="pn-info-icon">♙</span>Who is this for?</div>
+<div class="pn-info-iconbox">
+<svg viewBox="0 0 48 48" aria-hidden="true">
+<path d="M14 18v18h20V18"/>
+<path d="M18 18v-5a6 6 0 0 1 12 0v5"/>
+<circle cx="24" cy="26" r="3"/>
+<path d="M24 29v4"/>
+</svg>
+</div>
+<div class="pn-info-heading-wrap">
+<div class="pn-info-title">Who is this for?</div>
 <div class="pn-info-text">
 Principal Investigators,<br>
 Research Staff, and<br>
 Pre-Award Teams
 </div>
 </div>
+</div>
 
 <div class="pn-info-cell">
-<div class="pn-info-title"><span class="pn-info-icon">🎯</span>What does it do?</div>
+<div class="pn-info-iconbox pink">
+<svg viewBox="0 0 48 48" aria-hidden="true">
+<circle cx="21" cy="27" r="13"/>
+<circle cx="21" cy="27" r="7"/>
+<circle cx="21" cy="27" r="2"/>
+<path d="M28 20l11-11"/>
+<path d="M33 9h6v6"/>
+</svg>
+</div>
+<div class="pn-info-heading-wrap">
+<div class="pn-info-title">What does it do?</div>
 <div class="pn-info-text">
 Helps you understand budget rules,<br>
-identify gaps early, and prepare<br>
+find gaps early, and prepare<br>
 stronger proposals.
 </div>
 </div>
+</div>
 
 <div class="pn-info-cell">
-<div class="pn-info-title"><span class="pn-info-icon">✓</span>How does it help?</div>
+<div class="pn-info-iconbox">
+<svg viewBox="0 0 48 48" aria-hidden="true">
+<path d="M24 5l14 6v11c0 10-5.5 17-14 21-8.5-4-14-11-14-21V11z"/>
+<path d="M18 24l4 4 8-9"/>
+</svg>
+</div>
+<div class="pn-info-heading-wrap">
+<div class="pn-info-title">How does it help?</div>
 <ul class="pn-info-list">
 <li>Saves time</li>
 <li>Reduces errors</li>
@@ -1614,14 +1687,30 @@ stronger proposals.
 <li>Flags items needing expert review</li>
 </ul>
 </div>
+</div>
 
 <div class="pn-info-cell">
-<div class="pn-info-title"><span class="pn-info-icon">💡</span>Important</div>
+<div class="pn-info-iconbox">
+<svg viewBox="0 0 48 48" aria-hidden="true">
+<path d="M17 29c-3-2-5-6-5-10a12 12 0 1 1 24 0c0 4-2 8-5 10-2 2-3 4-3 6h-8c0-2-1-4-3-6z"/>
+<path d="M20 39h8"/>
+<path d="M21 43h6"/>
+<path d="M24 3v4"/>
+<path d="M8 8l3 3"/>
+<path d="M40 8l-3 3"/>
+<path d="M5 21h4"/>
+<path d="M39 21h4"/>
+</svg>
+</div>
+<div class="pn-info-heading-wrap">
+<div class="pn-info-title">Important</div>
 <div class="pn-info-text">
-AI provides guidance based on the NOFO and institutional rules.
+AI provides guidance based on the NOFO and institutional rules.<br>
 Always follow up with your Research Administration team for final approval.
 </div>
 </div>
+</div>
+
 </div>
 """
 
