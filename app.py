@@ -416,8 +416,18 @@ with c2:
             '<span class="pn-cardtitle">Guided Intake Questions</span></div>',
             unsafe_allow_html=True
         )
-        st.progress(1.0)
-        st.caption("7 intake questions")
+        answered_count = sum([
+            personnel != "Not sure",
+            travel != "Not sure",
+            equipment != "Not sure",
+            participant_incentives != "Not sure",
+            subawards != "Not sure",
+            cost_share != "Not sure",
+            indirect_costs != "Not sure"
+])
+
+st.progress(answered_count / 7)
+st.caption(f"{answered_count} of 7 answered")
         personnel = st.radio("Personnel costs?", ["Yes","No","Not sure"], horizontal=True, key="personnel")
         travel = st.radio("Travel?", ["Yes","No","Not sure"], horizontal=True, key="travel")
         equipment = st.radio("Equipment?", ["Yes","No","Not sure"], horizontal=True, key="equipment")
