@@ -435,6 +435,72 @@ div.stButton > button:hover{
     margin-right:.12rem !important;
 }
 
+
+.pn-info-strip{
+    margin-top:.7rem;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:linear-gradient(90deg,#fff3f7 0%,#fffafa 16%,#ffffff 100%);
+    display:grid;
+    grid-template-columns:1.1fr 1.35fr 1.55fr 1.6fr 1.55fr;
+    gap:0;
+    overflow:hidden;
+}
+.pn-info-brand,
+.pn-info-cell{
+    padding:.72rem .78rem;
+    min-width:0;
+}
+.pn-info-cell{
+    border-left:1px solid #f3dde5;
+}
+.pn-info-brand{
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+}
+.pn-info-dragonfly{
+    font-size:1.75rem;
+    line-height:1;
+    transform:rotate(-12deg);
+}
+.pn-info-tagline{
+    font-size:.66rem;
+    color:var(--muted);
+    line-height:1.32;
+}
+.pn-info-title{
+    font-size:.69rem;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:.26rem;
+}
+.pn-info-text{
+    font-size:.64rem;
+    color:var(--muted);
+    line-height:1.38;
+}
+.pn-info-list{
+    margin:0;
+    padding-left:.95rem;
+    font-size:.64rem;
+    color:var(--muted);
+    line-height:1.38;
+}
+.pn-info-icon{
+    font-size:1.08rem;
+    margin-right:.25rem;
+}
+@media (max-width: 900px){
+    .pn-info-strip{
+        grid-template-columns:1fr 1fr;
+    }
+    .pn-info-cell{
+        border-left:0;
+        border-top:1px solid #f3dde5;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1110,9 +1176,28 @@ with st.sidebar:
         )
 
     st.markdown(
-        '<div class="pn-help"><b>Need help?</b><br><br>'
-        'Proposal Navigator supports review — it does not replace Research Administration judgment.'
-        '</div>',
+        """
+        <div class="pn-help">
+            <b>Need help?</b><br><br>
+            Proposal Navigator supports review — it does not replace Research Administration judgment.
+            <br><br>
+            <b>Contact your Research Support Team for assistance.</b>
+            <br><br>
+            <a href="mailto:conresearch@etsu.edu"
+               style="
+                   display:block;
+                   text-align:center;
+                   background:#ef3b73;
+                   color:white;
+                   text-decoration:none;
+                   padding:8px 10px;
+                   border-radius:9px;
+                   font-weight:700;
+               ">
+               Contact Support
+            </a>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -1485,6 +1570,61 @@ if results:
                 unsafe_allow_html=True,
             )
 
-    st.markdown('<div class="pn-footer">Proposal Navigator v0 • Source-grounded AI readiness prototype</div>', unsafe_allow_html=True)
 else:
     st.info("Complete the guided intake and click 'Run Readiness Review' to generate the readiness dashboard.")
+
+
+# -----------------------------
+# BOTTOM INFORMATION STRIP
+# -----------------------------
+st.markdown(
+    """
+    <div class="pn-info-strip">
+        <div class="pn-info-brand">
+            <div class="pn-info-dragonfly">✧</div>
+            <div class="pn-info-tagline">
+                <b style="color:#ef3b73;">Guiding your way.</b><br>
+                Helping your research take flight.
+            </div>
+        </div>
+
+        <div class="pn-info-cell">
+            <div class="pn-info-title"><span class="pn-info-icon">♙</span>Who is this for?</div>
+            <div class="pn-info-text">
+                Principal Investigators,<br>
+                Research Staff, and<br>
+                Pre-Award Teams
+            </div>
+        </div>
+
+        <div class="pn-info-cell">
+            <div class="pn-info-title"><span class="pn-info-icon">🎯</span>What does it do?</div>
+            <div class="pn-info-text">
+                Helps you understand budget rules,<br>
+                identify gaps early, and prepare<br>
+                stronger proposals.
+            </div>
+        </div>
+
+        <div class="pn-info-cell">
+            <div class="pn-info-title"><span class="pn-info-icon">✓</span>How does it help?</div>
+            <ul class="pn-info-list">
+                <li>Saves time</li>
+                <li>Reduces errors</li>
+                <li>Supports compliance</li>
+                <li>Flags items needing expert review</li>
+            </ul>
+        </div>
+
+        <div class="pn-info-cell">
+            <div class="pn-info-title"><span class="pn-info-icon">💡</span>Important</div>
+            <div class="pn-info-text">
+                AI provides guidance based on the NOFO and institutional rules.
+                Always follow up with your Research Administration team for final approval.
+            </div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
