@@ -437,86 +437,71 @@ div.stButton > button:hover{
 
 
 
+
 .pn-info-strip{
     margin-top:.65rem;
     border:1px solid var(--border);
     border-radius:14px;
-    background:linear-gradient(90deg,#fff4f8 0%,#fffafa 18%,#ffffff 100%);
+    background:#fffdfd;
     display:grid;
-    grid-template-columns:1.05fr 1.35fr 1.45fr 1.55fr 1.45fr;
+    grid-template-columns:repeat(4, 1fr);
     align-items:stretch;
     overflow:hidden;
-    min-height:112px;
+    min-height:96px;
 }
-.pn-info-brand,
 .pn-info-cell{
-    padding:.72rem .82rem;
+    padding:.58rem .68rem;
     min-width:0;
-}
-.pn-info-cell{
-    border-left:1px solid #f2dce4;
     display:flex;
     align-items:flex-start;
-    gap:.62rem;
+    gap:.48rem;
 }
-.pn-info-brand{
-    display:flex;
-    align-items:center;
-    gap:.62rem;
-}
-.pn-footer-dragonfly{
-    width:42px;
-    height:42px;
-    flex:0 0 42px;
-}
-.pn-info-tagline{
-    font-size:.63rem;
-    color:var(--muted);
-    line-height:1.35;
+.pn-info-cell + .pn-info-cell{
+    border-left:1px solid #f2dce4;
 }
 .pn-info-heading-wrap{
     min-width:0;
 }
 .pn-info-title{
-    font-size:.68rem;
+    font-size:.65rem;
     font-weight:700;
     color:var(--ink);
-    margin-bottom:.22rem;
-    line-height:1.15;
+    margin-bottom:.16rem;
+    line-height:1.12;
 }
 .pn-info-text{
-    font-size:.62rem;
+    font-size:.58rem;
     color:var(--muted);
-    line-height:1.42;
+    line-height:1.32;
 }
 .pn-info-list{
     list-style:none;
-    margin:.08rem 0 0 0;
+    margin:.02rem 0 0 0;
     padding:0;
-    font-size:.62rem;
+    font-size:.58rem;
     color:var(--muted);
-    line-height:1.42;
+    line-height:1.32;
 }
 .pn-info-list li{
-    margin:.03rem 0;
+    margin:.01rem 0;
 }
 .pn-info-list li::before{
     content:"✓";
     color:var(--ink);
     font-weight:700;
-    margin-right:.32rem;
+    margin-right:.26rem;
 }
 .pn-info-iconbox{
-    width:38px;
-    height:38px;
-    flex:0 0 38px;
+    width:30px;
+    height:30px;
+    flex:0 0 30px;
     display:flex;
     align-items:center;
     justify-content:center;
 }
 .pn-info-iconbox svg{
-    width:34px;
-    height:34px;
+    width:27px;
+    height:27px;
     stroke:var(--ink);
     fill:none;
     stroke-width:1.8;
@@ -525,6 +510,30 @@ div.stButton > button:hover{
 }
 .pn-info-iconbox.pink svg{
     stroke:var(--pink);
+}
+
+/* Sidebar brand/tagline */
+.pn-side-flight{
+    margin-top:.65rem;
+    padding:.55rem .48rem;
+    border-top:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    gap:.42rem;
+}
+.pn-side-flight svg{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+}
+.pn-side-flight-copy{
+    font-size:.61rem;
+    color:var(--muted);
+    line-height:1.28;
+}
+.pn-side-flight-copy b{
+    color:var(--pink);
+    font-weight:700;
 }
 @media (max-width: 900px){
     .pn-info-strip{
@@ -1236,6 +1245,27 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
+    st.markdown(
+        """
+        <div class="pn-side-flight">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+                <ellipse cx="38" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-22 38 38)"/>
+                <ellipse cx="82" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(22 82 38)"/>
+                <ellipse cx="38" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(18 38 68)"/>
+                <ellipse cx="82" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-18 82 68)"/>
+                <rect x="55" y="20" width="10" height="62" rx="5" fill="#ef3b73"/>
+                <circle cx="60" cy="15" r="8" fill="#ef3b73"/>
+                <rect x="57" y="80" width="6" height="24" rx="3" fill="#ef3b73"/>
+            </svg>
+            <div class="pn-side-flight-copy">
+                <b>Guiding your way.</b><br>
+                Helping your research take flight.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # -----------------------------
 # HEADER
 # -----------------------------
@@ -1615,23 +1645,6 @@ else:
 footer_html = """
 <div class="pn-info-strip">
 
-<div class="pn-info-brand">
-<svg class="pn-footer-dragonfly" viewBox="0 0 120 120" aria-hidden="true">
-<ellipse cx="38" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-22 38 38)"/>
-<ellipse cx="82" cy="38" rx="23" ry="10" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(22 82 38)"/>
-<ellipse cx="38" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(18 38 68)"/>
-<ellipse cx="82" cy="68" rx="20" ry="9" fill="rgba(255,255,255,.95)" stroke="#ef3b73" stroke-width="4" transform="rotate(-18 82 68)"/>
-<rect x="55" y="20" width="10" height="62" rx="5" fill="#ef3b73"/>
-<circle cx="60" cy="15" r="8" fill="#ef3b73"/>
-<rect x="57" y="80" width="6" height="24" rx="3" fill="#ef3b73"/>
-</svg>
-<div class="pn-info-tagline">
-<b style="color:#ef3b73;">Guiding your way.</b><br>
-Helping your research<br>
-take flight.
-</div>
-</div>
-
 <div class="pn-info-cell">
 <div class="pn-info-iconbox">
 <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -1645,8 +1658,7 @@ take flight.
 <div class="pn-info-title">Who is this for?</div>
 <div class="pn-info-text">
 Principal Investigators,<br>
-Research Staff, and<br>
-Pre-Award Teams
+Research Staff, and Pre-Award Teams
 </div>
 </div>
 </div>
@@ -1664,9 +1676,7 @@ Pre-Award Teams
 <div class="pn-info-heading-wrap">
 <div class="pn-info-title">What does it do?</div>
 <div class="pn-info-text">
-Helps you understand budget rules,<br>
-find gaps early, and prepare<br>
-stronger proposals.
+Helps you understand budget rules, identify gaps early, and prepare stronger proposals.
 </div>
 </div>
 </div>
@@ -1705,8 +1715,7 @@ stronger proposals.
 <div class="pn-info-heading-wrap">
 <div class="pn-info-title">Important</div>
 <div class="pn-info-text">
-AI provides guidance based on the NOFO and institutional rules.<br>
-Always follow up with your Research Administration team for final approval.
+AI provides guidance based on the NOFO and institutional rules. Always follow up with your Research Administration team for final approval.
 </div>
 </div>
 </div>
