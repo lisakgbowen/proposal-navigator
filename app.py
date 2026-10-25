@@ -7,6 +7,7 @@ import re
 import time
 import hashlib
 import os
+from datetime import date, datetime
 
 try:
     from openai import OpenAI
@@ -655,6 +656,54 @@ def get_document_data(uploaded_file):
     return extract_document_cached(uploaded_file.name, file_bytes)
 
 
+# Early screening is advisory; the sponsor's current complete instructions govern.
+def screen_deadlines(pages):
+    """Conservative deadline extraction: do not confuse award/start/expiration dates."""
+    candidates = []
+    date_pattern = r"(?:\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+20\d{2}\b|\b\d{1,2}[/-]\d{1,2}[/-]20\d{2}\b)"
+    label_pattern = re.compile(r"(?:application\s+(?:due\s+dates?|deadlines?|due)|applications\s+(?:are\s+)?due|deadline\s+for\s+applications|new\s+applications?)\s*[:\-]?\s*", re.I)
+    for page_no, text in pages:
+        flat = clean_text(text)
+        for m in label_pattern.finditer(flat):
+            nearby = flat[m.end():m.end()+65]
+            for dm in re.finditer(date_pattern, nearby, re.I):
+                raw = dm.group(0)
+                parsed = None
+                for fmt in ("%B %d, %Y", "%B %d %Y", "%m/%d/%Y", "%m-%d-%Y"):
+                    try:
+                        parsed = datetime.strptime(raw, fmt).date()
+                        break
+                    except ValueError:
+                        pass
+                if parsed is not None:
+                    candidates.append((parsed, page_no, raw))
+    unique = {}
+    for d, pg, raw in candidates:
+        unique.setdefault(d, (d, pg, raw))
+    ordered = sorted(unique.values(), key=lambda x:x[0])
+    today = date.today()
+    upcoming = [c for c in ordered if c[0] >= today]
+    if not ordered:
+        return {"status":"Unverified", "message":"No reliably labeled application due date was extracted. Check the sponsor's current full instructions and amendments.", "candidates":[]}
+    if upcoming:
+        chosen = upcoming[0]
+        return {"status":"Future date found", "message":f"Potential next application due date: {chosen[0]:%B %d, %Y} (PDF page {chosen[1]}). Confirm cycle, application type, time zone, and amendments with the sponsor.", "candidates":ordered}
+    latest = ordered[-1]
+    return {"status":"Past date only", "message":f"Latest extracted application due date: {latest[0]:%B %d, %Y} (PDF page {latest[1]}) — passed as of {today:%B %d, %Y}. Confirm no extension or replacement opportunity exists.", "candidates":ordered}
+
+
+def eligibility_screen(answer, public_allowed):
+    if answer == "Yes — only 501(c)(3) organizations":
+        return ("STOP — apparent applicant ineligibility", "ETSU is a public state institution of higher education under IRC §170(c)(1), not a 501(c)(3) organization. If the sponsor truly requires 501(c)(3) status exclusively, ETSU cannot apply as the direct applicant. Do not begin ETSURGe routing. Contact the Center for Nursing Research to verify the full eligibility rules and any written sponsor clarification.")
+    if answer == "Not sure / not verified" or answer is None:
+        return ("Eligibility not verified", "Review the funder's application directions, grant requirements webpage, and any other incorporated eligibility rules. Contact the Center for Nursing Research for assistance before substantial proposal preparation.")
+    if public_allowed == "No":
+        return ("Potential applicant-type restriction", "Public universities are not listed as eligible in the materials reviewed. Do not assume ETSU qualifies. Contact the Center for Nursing Research to check the sponsor's full eligibility conditions.")
+    if public_allowed == "Not sure" or public_allowed is None:
+        return ("Public-university eligibility unverified", "Check whether public institutions of higher education are explicitly eligible. Contact the Center for Nursing Research if the language is unclear.")
+    return ("No identified applicant-type conflict from intake", "This is not an institutional eligibility determination. Confirm all funder eligibility and application instructions.")
+
+
 def find_source_match(pages, keywords):
     for page_number, page_text in pages:
         normalized_text = clean_text(page_text)
@@ -695,6 +744,9 @@ You are assisting with proposal-readiness review in research administration.
 Review ONLY the source excerpt below.
 Do not invent sponsor requirements.
 Do not assume that silence means something is allowed or prohibited.
+If source lists a cost under 'not allowed', 'unallowable', or 'prohibited', call it expressly prohibited; distinguish a specific restriction such as foreign travel from all travel.
+Do not label all travel misaligned merely because foreign travel is prohibited.
+If an excerpt is incomplete, do not claim you checked the full section.
 
 Proposal category: {category}
 User intake answer: {intake_answer}
@@ -1350,12 +1402,12 @@ with col1:
         )
 
         st.caption(
-            "Upload the funding announcement supplied by the sponsor. "
-            "It may be called a NOFO, RFP, or funding opportunity announcement."
+            "Upload sponsor guidance: NOFO, application directions, eligibility requirements, "
+            "or a saved PDF of a funder webpage. Review other linked instructions too."
         )
 
         uploaded_file = st.file_uploader(
-            "Upload a Notice of Funding Opportunity (NOFO), RFP, or other sponsor guidance document",
+            "Upload a NOFO, RFP, application instructions, or other sponsor eligibility guidance",
             type=["pdf", "txt", "docx"],
             key="funding_file",
         )
@@ -1512,6 +1564,43 @@ with col3:
             unsafe_allow_html=True,
         )
 
+# Front-end eligibility and timing checks occur before budget review.
+st.markdown("### Funding Opportunity Eligibility Check")
+st.caption("Check NOFOs AND separate funder application instructions or eligibility webpages. This is an early warning, not a substitute for sponsor or institutional verification.")
+sc1, sc2 = st.columns(2)
+with sc1:
+    eligibility_501c3 = st.selectbox(
+        "Does the funder restrict applicants exclusively to IRS 501(c)(3) organizations?",
+        ["Not sure / not verified", "Yes — only 501(c)(3) organizations", "No — not exclusively"],
+        key="eligibility_501c3",
+        help="ETSU is a state institution of higher education, not a 501(c)(3) organization.",
+    )
+with sc2:
+    public_university_allowed = st.selectbox(
+        "Do the complete sponsor instructions explicitly allow public universities?",
+        ["Not sure", "Yes", "No"],
+        key="public_university_allowed",
+    )
+eligibility_status, eligibility_message = eligibility_screen(eligibility_501c3, public_university_allowed)
+if eligibility_status.startswith("STOP"):
+    st.error(f"**{eligibility_status}** — {eligibility_message}")
+elif "not verified" in eligibility_status.lower() or "restriction" in eligibility_status.lower() or "unverified" in eligibility_status.lower():
+    st.warning(f"**{eligibility_status}** — {eligibility_message}")
+else:
+    st.info(f"**{eligibility_status}** — {eligibility_message}")
+
+deadline_check = screen_deadlines(document_pages) if document_pages else {"status":"Unverified", "message":"Upload a funding document to screen for application dates.", "candidates":[]}
+if deadline_check["status"] == "Past date only":
+    st.error("**Application deadline screening:** " + deadline_check["message"])
+elif deadline_check["status"] == "Future date found":
+    st.info("**Application deadline screening:** " + deadline_check["message"])
+else:
+    st.warning("**Application deadline screening:** " + deadline_check["message"])
+if len(deadline_check["candidates"]) > 1:
+    with st.expander("Other extracted deadline dates (verify applicability)"):
+        for d, pg, raw in deadline_check["candidates"]:
+            st.write(f"{d:%B %d, %Y} — PDF page {pg}")
+
 responses = {
     "Personnel costs": personnel,
     "Travel": travel,
@@ -1552,6 +1641,33 @@ if run_review:
     )
 
     results = compute_results(responses, document_pages, gift_cards, research_project)
+    results["eligibility_status"] = eligibility_status
+    results["eligibility_message"] = eligibility_message
+    results["deadline_status"] = deadline_check["status"]
+    results["deadline_message"] = deadline_check["message"]
+    opening = [
+        "PROPOSAL NAVIGATOR — QUICK-READ REPORT",
+        "======================================",
+        "FIRST: CHECK WHETHER YOU CAN APPLY",
+        f"Applicant-type screen: {eligibility_status}",
+        eligibility_message,
+        f"Application deadline: {deadline_check['status']}",
+        deadline_check["message"],
+        "",
+        "WHAT TO DO NEXT",
+        "1. Resolve any eligibility restrictions and expired/uncertain deadlines BEFORE proposal preparation or ETSURGe routing.",
+        "2. Contact the Center for Nursing Research for assistance with uncertain sponsor requirements.",
+        "3. Research Administration makes formal institutional decisions; this tool is not an approval.",
+        "",
+        "BUDGET SCREENING (NOT AN ELIGIBILITY OR APPROVAL SCORE)",
+        f"Intake/source completeness indicator: {results['readiness_pct']}% (not an approval probability)",
+        f"Research Administration / human-review items: {len(results['human_review'])}",
+        "",
+        "FULL TECHNICAL FINDINGS BELOW",
+        "======================================",
+        "",
+    ]
+    results["report_text"] = "\n".join(opening) + results["report_text"]
     st.session_state.review_results = results
     st.session_state.review_phase = "complete"
 
@@ -1580,7 +1696,7 @@ if results:
             st.markdown(
                 f'<div class="pn-readiness" style="--pct:{results["readiness_pct"]};">'
                 f'<div class="pn-readiness-inner"><strong>{results["readiness_pct"]}%</strong>'
-                f'<span>Overall readiness</span></div></div>',
+                f'<span>Budget check only</span></div></div>',
                 unsafe_allow_html=True,
             )
 
@@ -1595,7 +1711,7 @@ if results:
             )
 
         st.caption(
-            "Required Research Administration review is a normal workflow step and does not automatically lower readiness."
+            "This percentage measures intake/source completeness, NOT eligibility, grant compliance, or institutional approval. Check the eligibility and deadline warnings above."
         )
 
     # Bottom three cards
