@@ -692,16 +692,40 @@ def screen_deadlines(pages):
     return {"status":"Past date only", "message":f"Latest extracted application due date: {latest[0]:%B %d, %Y} (PDF page {latest[1]}) — passed as of {today:%B %d, %Y}. Confirm no extension or replacement opportunity exists.", "candidates":ordered}
 
 
-def eligibility_screen(answer, public_allowed):
-    if answer == "Yes — only 501(c)(3) organizations":
-        return ("STOP — apparent applicant ineligibility", "ETSU is a public state institution of higher education under IRC §170(c)(1), not a 501(c)(3) organization. If the sponsor truly requires 501(c)(3) status exclusively, ETSU cannot apply as the direct applicant. Do not begin ETSURGe routing. Contact the Center for Nursing Research to verify the full eligibility rules and any written sponsor clarification.")
-    if answer == "Not sure / not verified" or answer is None:
-        return ("Eligibility not verified", "Review the funder's application directions, grant requirements webpage, and any other incorporated eligibility rules. Contact the Center for Nursing Research for assistance before substantial proposal preparation.")
+def eligibility_screen(answer, public_allowed, applicant_type):
+    """Intake triage only; the applicant's actual legal entity requires human review."""
+    if answer == "Yes":
+        if public_allowed == "Yes":
+            return ("Conflicting eligibility information — CNR review required",
+                    "You indicated both a 501(c)(3) requirement and explicit public-university eligibility. These may represent alternative applicant types or conflicting instructions. Ask CNR to confirm the complete rules before proceeding.")
+        return ("Potential 501(c)(3) restriction — stop and verify",
+                "ETSU as a public university generally relies on IRC §170(c)(1), not 501(c)(3). A department or affiliated organization may have a different legal structure, but its status and authority to apply must be verified. Contact CNR before proposal preparation or institutional routing.")
+    if answer == "Not sure":
+        return ("Eligibility not verified — contact CNR",
+                "You do not need to know the institution's tax classification. CNR can help verify the actual applicant organization and the funder's eligibility instructions before substantial proposal work begins.")
     if public_allowed == "No":
-        return ("Potential applicant-type restriction", "Public universities are not listed as eligible in the materials reviewed. Do not assume ETSU qualifies. Contact the Center for Nursing Research to check the sponsor's full eligibility conditions.")
-    if public_allowed == "Not sure" or public_allowed is None:
-        return ("Public-university eligibility unverified", "Check whether public institutions of higher education are explicitly eligible. Contact the Center for Nursing Research if the language is unclear.")
-    return ("No identified applicant-type conflict from intake", "This is not an institutional eligibility determination. Confirm all funder eligibility and application instructions.")
+        return ("Possible organizational restriction — contact CNR",
+                "The sponsor may exclude public universities even without an exclusive 501(c)(3) requirement. Have CNR review the complete eligibility criteria.")
+    if public_allowed == "Not sure":
+        return ("Organizational eligibility still uncertain",
+                "No exclusive 501(c)(3) requirement was reported, but public-university eligibility has not been verified. CNR can help interpret the sponsor requirements.")
+    return ("No conflict reported by PI — verify sponsor rules",
+            "This is an intake response, not a determination of eligibility. The sponsor's complete instructions and the proposed applicant's legal status still require verification.")
+
+
+def sponsor_eligibility_mentions(pages):
+    """Surface source evidence without assuming that a mention creates a prohibition."""
+    terms = ["501(c)(3)", "501 (c) (3)", "501c3", "public universities", "public institutions of higher education"]
+    matches = []
+    for pg, body in pages:
+        norm = clean_text(body)
+        low = norm.lower()
+        for term in terms:
+            pos = low.find(term)
+            if pos >= 0:
+                matches.append((pg, term, norm[max(0, pos-105):min(len(norm), pos+245)]))
+                break
+    return matches[:5]
 
 
 def find_source_match(pages, keywords):
@@ -1363,6 +1387,43 @@ st.markdown(
 )
 
 
+# Prominent pre-budget eligibility intake. This does not assert the legal status of a department or affiliate.
+st.markdown("## 🛡️ START HERE — Funding Opportunity Eligibility")
+st.caption("Before preparing a budget, identify potential applicant-status restrictions. If you are unsure, CNR can help — no tax-status expertise is expected of the PI.")
+with st.container(border=True):
+    eligibility_501c3 = st.radio(
+        "**Does the funding opportunity require applicants to have IRS 501(c)(3) status?**",
+        ["Yes", "No", "Not sure"],
+        index=2,
+        horizontal=True,
+        key="eligibility_501c3",
+        help="A sponsor may list 501(c)(3) organizations among several eligible types. A mention is not necessarily an exclusive requirement.",
+    )
+    c_org, c_public = st.columns(2)
+    with c_org:
+        applicant_type = st.selectbox(
+            "Which organization would submit the application?",
+            ["ETSU (university)", "Department / center / affiliate — needs verification", "Not sure"],
+            key="applicant_type",
+        )
+    with c_public:
+        public_university_allowed = st.selectbox(
+            "Do the sponsor instructions explicitly allow public universities?",
+            ["Not sure", "Yes", "No"],
+            key="public_university_allowed",
+        )
+    eligibility_status, eligibility_message = eligibility_screen(eligibility_501c3, public_university_allowed, applicant_type)
+    if eligibility_501c3 == "Yes":
+        if public_university_allowed == "Yes":
+            st.warning(f"**{eligibility_status}** — {eligibility_message}")
+        else:
+            st.error(f"**{eligibility_status}** — {eligibility_message}")
+    elif eligibility_501c3 == "Not sure" or public_university_allowed != "Yes":
+        st.warning(f"**{eligibility_status}** — {eligibility_message}")
+    else:
+        st.info(f"**{eligibility_status}** — {eligibility_message}")
+    st.caption("CNR can help confirm which legal entity would be the applicant. A department's name alone does not establish a separate IRS classification. Sponsor language and institutional authority must be verified.")
+
 with st.expander("How to Use Proposal Navigator", expanded=False):
     st.markdown(
         """
@@ -1564,32 +1625,19 @@ with col3:
             unsafe_allow_html=True,
         )
 
-# Front-end eligibility and timing checks occur before budget review.
-st.markdown("### Funding Opportunity Eligibility Check")
-st.caption("Check NOFOs AND separate funder application instructions or eligibility webpages. This is an early warning, not a substitute for sponsor or institutional verification.")
-sc1, sc2 = st.columns(2)
-with sc1:
-    eligibility_501c3 = st.selectbox(
-        "Does the funder restrict applicants exclusively to IRS 501(c)(3) organizations?",
-        ["Not sure / not verified", "Yes — only 501(c)(3) organizations", "No — not exclusively"],
-        key="eligibility_501c3",
-        help="ETSU is a state institution of higher education, not a 501(c)(3) organization.",
-    )
-with sc2:
-    public_university_allowed = st.selectbox(
-        "Do the complete sponsor instructions explicitly allow public universities?",
-        ["Not sure", "Yes", "No"],
-        key="public_university_allowed",
-    )
-eligibility_status, eligibility_message = eligibility_screen(eligibility_501c3, public_university_allowed)
-if eligibility_status.startswith("STOP"):
-    st.error(f"**{eligibility_status}** — {eligibility_message}")
-elif "not verified" in eligibility_status.lower() or "restriction" in eligibility_status.lower() or "unverified" in eligibility_status.lower():
-    st.warning(f"**{eligibility_status}** — {eligibility_message}")
-else:
-    st.info(f"**{eligibility_status}** — {eligibility_message}")
-
+# Screen dates from the uploaded text; applicant eligibility is displayed prominently above.
 deadline_check = screen_deadlines(document_pages) if document_pages else {"status":"Unverified", "message":"Upload a funding document to screen for application dates.", "candidates":[]}
+source_eligibility_mentions = sponsor_eligibility_mentions(document_pages)
+with st.expander("Sponsor eligibility language found in uploaded document (verify in context)", expanded=False):
+    if source_eligibility_mentions:
+        for page_number, term, excerpt in source_eligibility_mentions:
+            st.markdown(f"**PDF page {page_number} · {term}**")
+            st.write(excerpt)
+        st.caption("Keyword matches are evidence to review, not proof that an applicant is eligible or ineligible. Other linked sponsor instructions may apply.")
+    else:
+        st.info("No relevant organization-type terms were located by the current search. This does not establish eligibility. Check all sponsor instructions and associated webpages.")
+if source_eligibility_mentions and eligibility_501c3 == "No":
+    st.warning("**Sponsor text cross-check:** The uploaded document mentions 501(c)(3) or public-university status. Verify the surrounding eligibility rules with CNR; a mention alone does not establish an exclusive restriction.")
 if deadline_check["status"] == "Past date only":
     st.error("**Application deadline screening:** " + deadline_check["message"])
 elif deadline_check["status"] == "Future date found":
@@ -1649,7 +1697,7 @@ if run_review:
         "PROPOSAL NAVIGATOR — QUICK-READ REPORT",
         "======================================",
         "FIRST: CHECK WHETHER YOU CAN APPLY",
-        f"Applicant-type screen: {eligibility_status}",
+        f"Applicant eligibility intake: {eligibility_status}",
         eligibility_message,
         f"Application deadline: {deadline_check['status']}",
         deadline_check["message"],
