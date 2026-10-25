@@ -658,13 +658,15 @@ def get_document_data(uploaded_file):
 
 # Early screening is advisory; the sponsor's current complete instructions govern.
 def screen_deadlines(pages):
-    """Conservative deadline extraction: do not confuse award/start/expiration dates."""
+    """Find labeled date candidates; never choose one from conflicting dates automatically."""
     candidates = []
     date_pattern = r"(?:\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+20\d{2}\b|\b\d{1,2}[/-]\d{1,2}[/-]20\d{2}\b)"
     label_pattern = re.compile(r"(?:application\s+(?:due\s+dates?|deadlines?|due)|applications\s+(?:are\s+)?due|deadline\s+for\s+applications|new\s+applications?)\s*[:\-]?\s*", re.I)
     for page_no, text in pages:
         flat = clean_text(text)
         for m in label_pattern.finditer(flat):
+            # A date following a relevant label is only a candidate; it may refer
+            # to a different application cycle or another instruction altogether.
             nearby = flat[m.end():m.end()+65]
             for dm in re.finditer(date_pattern, nearby, re.I):
                 raw = dm.group(0)
@@ -680,16 +682,28 @@ def screen_deadlines(pages):
     unique = {}
     for d, pg, raw in candidates:
         unique.setdefault(d, (d, pg, raw))
-    ordered = sorted(unique.values(), key=lambda x:x[0])
+    ordered = sorted(unique.values(), key=lambda x: x[0])
     today = date.today()
-    upcoming = [c for c in ordered if c[0] >= today]
     if not ordered:
-        return {"status":"Unverified", "message":"No reliably labeled application due date was extracted. Check the sponsor's current full instructions and amendments.", "candidates":[]}
-    if upcoming:
-        chosen = upcoming[0]
-        return {"status":"Future date found", "message":f"Potential next application due date: {chosen[0]:%B %d, %Y} (PDF page {chosen[1]}). Confirm cycle, application type, time zone, and amendments with the sponsor.", "candidates":ordered}
-    latest = ordered[-1]
-    return {"status":"Past date only", "message":f"Latest extracted application due date: {latest[0]:%B %d, %Y} (PDF page {latest[1]}) — passed as of {today:%B %d, %Y}. Confirm no extension or replacement opportunity exists.", "candidates":ordered}
+        return {"status": "Unverified", "message": "No reliably labeled application due date was extracted. Check the sponsor's current complete instructions and amendments.", "candidates": []}
+    if len(ordered) > 1:
+        date_list = "; ".join(f"{d:%B %d, %Y} (PDF page {pg})" for d, pg, _ in ordered)
+        all_past = all(d < today for d, _, _ in ordered)
+        return {
+            "status": "Multiple dates found",
+            "message": (
+                f"Multiple possible application dates were extracted: {date_list}. "
+                + (f"All extracted dates have passed as of {today:%B %d, %Y}. " if all_past else "")
+                + "The application cannot safely determine which date applies to this applicant or funding cycle. "
+                + "Verify the official application deadline and any amendments with the sponsor or CNR before proceeding."
+            ),
+            "candidates": ordered,
+            "all_past": all_past,
+        }
+    chosen = ordered[0]
+    if chosen[0] < today:
+        return {"status": "Past date only", "message": f"Potential application due date: {chosen[0]:%B %d, %Y} (PDF page {chosen[1]}) — passed as of {today:%B %d, %Y}. Confirm the applicable cycle and any extensions.", "candidates": ordered}
+    return {"status": "Future date found", "message": f"Potential application due date: {chosen[0]:%B %d, %Y} (PDF page {chosen[1]}). Confirm the applicable cycle, time zone, and amendments before proceeding.", "candidates": ordered}
 
 
 def eligibility_screen(answer, public_allowed, applicant_type):
@@ -1638,14 +1652,14 @@ with st.expander("Sponsor eligibility language found in uploaded document (verif
         st.info("No relevant organization-type terms were located by the current search. This does not establish eligibility. Check all sponsor instructions and associated webpages.")
 if source_eligibility_mentions and eligibility_501c3 == "No":
     st.warning("**Sponsor text cross-check:** The uploaded document mentions 501(c)(3) or public-university status. Verify the surrounding eligibility rules with CNR; a mention alone does not establish an exclusive restriction.")
-if deadline_check["status"] == "Past date only":
+if deadline_check["status"] == "Past date only" or (deadline_check["status"] == "Multiple dates found" and deadline_check.get("all_past")):
     st.error("**Application deadline screening:** " + deadline_check["message"])
 elif deadline_check["status"] == "Future date found":
     st.info("**Application deadline screening:** " + deadline_check["message"])
 else:
     st.warning("**Application deadline screening:** " + deadline_check["message"])
 if len(deadline_check["candidates"]) > 1:
-    with st.expander("Other extracted deadline dates (verify applicability)"):
+    with st.expander("Extracted deadline candidates (verify applicability)"):
         for d, pg, raw in deadline_check["candidates"]:
             st.write(f"{d:%B %d, %Y} — PDF page {pg}")
 
